@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Game</string>
+    <color name="light_blue">#0D85A8</color>
+    <color name="neon_pink">#F8305F</color>
+    <color name="neon_green">#30F8C9</color>
+    <color name="dark_blue">#064152</color>
+</resources>
