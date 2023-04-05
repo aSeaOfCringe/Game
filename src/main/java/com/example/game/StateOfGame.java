@@ -64,7 +64,7 @@ public class StateOfGame {
         return this.gameBoard;
     }
 
-    public void calculateHeuristic(String max, String min){
+    public void calculateHeuristic(String max, String min){ // Calculates heuristic value to current state
         for (int i=0; i<3; i++){
             for (int j=0; j<3; j++){
                 if ((i-1 < 0 && j-1 < 0) || (i+1>2 && j-1<0) || (i+1>2 && j+1>2) || (i-1<0 && j+1>2)){

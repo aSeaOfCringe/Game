@@ -289,8 +289,8 @@ public class PlayActivity extends AppCompatActivity {
         gameBoard[0][0] = new String(figure1);
         gameBoard[2][2] = new String(figure2);
         countPoints();
-        if (p1 == 1) {
-            p = p1;
+        if (this.p1 == 1) {
+            this.p = this.p1;
             botPlaying(view);
         }
     }
