@@ -1,15 +1,9 @@
 package com.example.game;
 
-import static java.security.AccessController.getContext;
-
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.ThemedSpinnerAdapter;
-import androidx.core.content.ContextCompat;
 
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -21,7 +15,7 @@ public class PlayActivity extends AppCompatActivity {
     int[][] buttons = {{R.id.btn_00, R.id.btn_01, R.id.btn_02},{R.id.btn_10, R.id.btn_11, R.id.btn_12},
             {R.id.btn_20, R.id.btn_21, R.id.btn_22}};
     String figure1, figure2, figure;
-    int color, color1, color2, p1, p2;
+    int color, color1, color2, p, p1, p2;
     TextView text1, text2, score1, score2;
     String[][] gameBoard = {{" ", " ", " "},{" ", " ", " "},{" ", " ", " "}};
     int moveProgress = -1;
@@ -64,6 +58,7 @@ public class PlayActivity extends AppCompatActivity {
             color2 = R.color.neon_pink;
         }
         color = color1;
+        p = p1;
 
         btn00.setText(figure1);
         btn00.setTextColor(getResources().getColor(color1));
@@ -81,9 +76,13 @@ public class PlayActivity extends AppCompatActivity {
 
         countPoints();
 
+        if (p1 == 1) {
+            View view = new View(this);
+            botPlaying(view);
+        }
     }
 
-    public void playGame(View view){
+    public void playGame(View view) {
         int buttonId = view.getId();
         Button b = findViewById(buttonId);
         int i = findIndex(buttonId);
@@ -105,7 +104,7 @@ public class PlayActivity extends AppCompatActivity {
                     c.setTextColor(getResources().getColor(color));
                     c.setBackgroundColor(getResources().getColor(R.color.dark_blue));
                     countPoints();
-                    resetForNextPlayer();
+                    resetForNextPlayer(view);
                 }
                 else if (((j==j1+2 || j == j1-2) && k==k1) || ((k==k1+2 || k == k1-2) && j==j1) ||
                         (j==j1 +1 && k == k1 + 1) || (j==j1 -1 && k == k1 - 1) ||
@@ -116,7 +115,7 @@ public class PlayActivity extends AppCompatActivity {
                     c.setBackgroundColor(getResources().getColor(R.color.dark_blue));
                     gameBoard[j][k] = new String(" ");
                     countPoints();
-                    resetForNextPlayer();
+                    resetForNextPlayer(view);
                 }
                 else {
                     Button c = (Button) findViewById(buttons[j][k]);
@@ -136,18 +135,20 @@ public class PlayActivity extends AppCompatActivity {
 
     }
 
-    public void resetForNextPlayer(){
+    public void resetForNextPlayer(View view) {
         moveProgress = -1;
         if (figure.equals(figure1)) {
             figure = new String(figure2);
             color = color2;
+            p = p2;
         }
         else {
             figure = new String(figure1);
             color = color1;
+            p = p1;
         }
         if (endOfGame()){
-            int player = 0;
+            int player;
             int sc1 = Integer.parseInt(String.valueOf(score1.getText()));
             int sc2 = Integer.parseInt(String.valueOf(score2.getText()));
             if (sc1 > sc2) player = 1;
@@ -157,6 +158,53 @@ public class PlayActivity extends AppCompatActivity {
             builder.setCancelable(true);
             AlertDialog alert1 = builder.create();
             alert1.show();
+
+        }
+        if (p == 1) botPlaying(view);
+    }
+
+    public void botPlaying(View view){
+        //TimeUnit.SECONDS.sleep(2);
+        String figMin;
+        if (figure.equals(figure1)) figMin = figure2;
+        else figMin = figure1;
+        Bot b = new Bot(null);
+        b.generatePartialTree(0, 0, 0, 0, gameBoard, figure, figMin, null, -1);
+        b.chooseTheMove(b.tree, figure, figMin);
+        //TimeUnit.SECONDS.sleep(2);
+        System.out.println("The value of root is " + b.tree.getNode().getHeuristicResult());
+        int i1 = b.tree.getNode().getI1();
+        int i2 = b.tree.getNode().getI2();
+        int j1 = b.tree.getNode().getJ1();
+        int j2 = b.tree.getNode().getJ2();
+        System.out.println("i1 = " + i1);
+        System.out.println("i2 = " + i2);
+        System.out.println("j1 = " + j1);
+        System.out.println("J2 = " + j2);
+        Button btn = findViewById(buttons[i1][j1]);
+        btn.setTextColor(getResources().getColor(R.color.dark_blue));
+        btn.setBackgroundColor(getResources().getColor(color));
+       // TimeUnit.SECONDS.sleep(1);
+        if (((i1==i2+1 || i1 == i2-1) && j1==j2) || ((j1==j2+1 || j1 == j2-1) && i1==i2)) {
+            makeMove((i2*10)+j2);
+            Button c = (Button) findViewById(buttons[i1][j1]);
+            c.setTextColor(getResources().getColor(color));
+            c.setBackgroundColor(getResources().getColor(R.color.dark_blue));
+            countPoints();
+            resetForNextPlayer(view);
+            if (p == 1) botPlaying(view);
+        }
+        else if (((i1==i2+2 || i1 == i2-2) && j1==j2) || ((j1==j2+2 || j1 == j2-2) && i1==i2) ||
+                (i1==i2 +1 && j1 == j2 + 1) || (i1==i2 -1 && j1 == j2 - 1) ||
+                (i1==i2 +1 && j1 == j2 - 1) || (i1==i2 -1 && j1 == j2 + 1)) {
+            makeMove((i2*10)+j2);
+            Button c = (Button) findViewById(buttons[i1][j1]);
+            c.setText(" ");
+            c.setBackgroundColor(getResources().getColor(R.color.dark_blue));
+            gameBoard[i1][j1] = new String(" ");
+            countPoints();
+            resetForNextPlayer(view);
+            if (p == 1) botPlaying(view);
         }
     }
 
@@ -220,8 +268,8 @@ public class PlayActivity extends AppCompatActivity {
                 if (gameBoard[i][j].equals(figure2)) p2 += 1;
             }
         }
-        score1.setText(Integer.toString(p1));
-        score2.setText(Integer.toString(p2));
+        score1.setText(String.format("%d",p1));
+        score2.setText(String.format("%d",p2));
     }
 
     public void resetGame(View view){
@@ -232,15 +280,23 @@ public class PlayActivity extends AppCompatActivity {
                 gameBoard[i][j] = new String(" ");
             }
         }
-        Button p1 = (Button) findViewById(buttons[0][0]);
-        Button p2 = (Button) findViewById(buttons[2][2]);
-        p1.setText(figure1);
-        p2.setText(figure2);
-        p1.setTextColor(getResources().getColor(color1));
-        p2.setTextColor(getResources().getColor(color2));
+        Button pp1 = (Button) findViewById(buttons[0][0]);
+        Button pp2 = (Button) findViewById(buttons[2][2]);
+        pp1.setText(figure1);
+        pp2.setText(figure2);
+        pp1.setTextColor(getResources().getColor(color1));
+        pp2.setTextColor(getResources().getColor(color2));
         gameBoard[0][0] = new String(figure1);
         gameBoard[2][2] = new String(figure2);
         countPoints();
+        if (p1 == 1) {
+            p = p1;
+            botPlaying(view);
+        }
+    }
+
+    public void goBack(View view){
+        super.onBackPressed();
     }
 
     public int findIndex(int btnId){
